@@ -1,0 +1,30 @@
+name: Chain request
+description: Ask for a blockchain to be supported.
+labels: ["feature"]
+body:
+  - type: input
+    id: chain
+    attributes:
+      label: Chain
+      placeholder: Sui
+    validations:
+      required: true
+  - type: dropdown
+    id: cctp
+    attributes:
+      label: Does Circle's CCTP V2 support USDC on this chain?
+      options:
+        - "Yes, on mainnet and testnet"
+        - "Yes, testnet only"
+        - "No or not sure"
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Link to Circle's supported chains or contract addresses page
+  - type: textarea
+    id: why
+    attributes:
+      label: Who needs it
+      description: The product or users that would pay or get paid on this chain.

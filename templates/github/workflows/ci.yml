@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: usewhisk/.github/.github/workflows/quality.yml@main
+  secrets:
+    uses: usewhisk/.github/.github/workflows/secrets.yml@main
+  commits:
+    uses: usewhisk/.github/.github/workflows/commits.yml@main
+  # Private repos on the free plan cannot protect main, so a bad push raises an issue instead.
+  main-guard:
+    needs: quality
+    if: always() && github.event_name == 'push' && github.event.repository.private
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    uses: usewhisk/.github/.github/workflows/main-guard.yml@main
+    with:
+      quality-result: ${{ needs.quality.result }}

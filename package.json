@@ -1,0 +1,25 @@
+{
+  "name": "@usewhisk/github",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Whisk organization profile, community health files and shared workflows.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "prepare": "lefthook install",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "bash test/hooks.test.sh",
+    "preflight": "./scripts/preflight.sh"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "lefthook": "^2.2.2",
+    "prettier": "^3.9.10"
+  }
+}

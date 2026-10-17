@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/usewhisk/whisk/discussions
+    about: For anything that is not a bug or a concrete feature request.
+  - name: Security vulnerability
+    url: https://github.com/usewhisk/whisk/security/advisories/new
+    about: Report privately. See SECURITY.md for what to include.
+  - name: Documentation
+    url: https://docs.usewhisk.xyz
+    about: Guides, SDK reference and API reference.

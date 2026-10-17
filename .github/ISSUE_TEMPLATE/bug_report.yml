@@ -1,0 +1,60 @@
+name: Bug report
+description: Something is broken in a Whisk package, site or API.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Found a security problem? Do not file it here. Use
+        [private vulnerability reporting](https://github.com/usewhisk/whisk/security/advisories/new).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The symptom you saw, in a short paragraph.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Chain pair, wallet, configuration and exact inputs.
+      placeholder: |
+        1. Connect a wallet on Base Sepolia.
+        2. Send 1.00 USDC to Arc Testnet.
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: tx
+    attributes:
+      label: Source transaction hash
+      description: If a transfer was involved. Testnet hashes help the most.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: "@usewhisk/react@0.2.0, viem@2.49.3"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Console errors or failing network requests.
+      render: text
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and found no duplicate.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true

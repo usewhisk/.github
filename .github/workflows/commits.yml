@@ -1,0 +1,47 @@
+name: commits
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    name: commitlint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The squash merge uses the PR title as the commit on main, so it is linted too.
+      - name: Lint the PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$TITLE" | pnpm exec commitlint --verbose
+      - name: Lint every commit
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec commitlint --from "$BASE" --to "$HEAD" --verbose
+      - name: No AI trailers in commits or the PR body
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          msg="$(mktemp)"
+          for sha in $(git rev-list "${BASE}..${HEAD}"); do
+            git log -1 --format=%B "$sha" > "$msg"
+            ./scripts/hooks/no-ai-trailer.sh "$msg"
+          done
+          printf '%s\n' "$BODY" > "$msg"
+          ./scripts/hooks/no-ai-trailer.sh "$msg"

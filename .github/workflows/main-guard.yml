@@ -1,0 +1,51 @@
+name: main-guard
+
+on:
+  workflow_call:
+    inputs:
+      quality-result:
+        description: The result of the caller's quality job on this push
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  guard:
+    name: main-guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Raise an issue when main took a bad push
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+          QUALITY: ${{ inputs.quality-result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          problems=""
+          merged="$(gh api "repos/${REPO}/commits/${SHA}/pulls" --jq 'map(select(.merged_at != null)) | length')"
+          if [ "$merged" = "0" ]; then
+            problems="${problems}- ${SHA} reached main without a merged pull request (pushed by @${ACTOR}).\n"
+          fi
+          if [ "$QUALITY" != "success" ]; then
+            problems="${problems}- The quality check on main finished as '${QUALITY}'.\n"
+          fi
+          if [ -z "$problems" ]; then
+            echo "main is clean"
+            exit 0
+          fi
+
+          gh label create main-broken --repo "$REPO" --color b60205 --description "main took a push that skipped the gates" --force
+          existing="$(gh issue list --repo "$REPO" --label main-broken --state open --search "$SHA" --json number --jq 'length')"
+          if [ "$existing" != "0" ]; then
+            echo "An open main-broken issue already covers ${SHA}"
+            exit 1
+          fi
+          body="$(printf 'main needs attention.\n\n%b\nRun: %s\n\nRevert or fix through a pull request.' "$problems" "$RUN_URL")"
+          gh issue create --repo "$REPO" --title "main-broken: ${SHA:0:7}" --label main-broken --assignee Signor1 --body "$body"
+          exit 1

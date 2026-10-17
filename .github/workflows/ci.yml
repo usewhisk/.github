@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: ./.github/workflows/quality.yml
+    with:
+      tools: actionlint gitleaks shellcheck
+  secrets:
+    uses: ./.github/workflows/secrets.yml
+  commits:
+    uses: ./.github/workflows/commits.yml

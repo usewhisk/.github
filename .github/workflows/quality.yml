@@ -1,0 +1,65 @@
+name: quality
+
+on:
+  workflow_call:
+    inputs:
+      tools:
+        description: "Extra CLI tools the repo's preflight needs: any of actionlint, gitleaks, shellcheck"
+        type: string
+        default: ""
+      audit:
+        description: Fail on high and critical dependency advisories
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install tools
+        if: inputs.tools != ''
+        env:
+          TOOLS: ${{ inputs.tools }}
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          for tool in $TOOLS; do
+            case "$tool" in
+              actionlint)
+                v=1.7.12; sum=8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+                f="actionlint_${v}_linux_amd64.tar.gz"
+                curl -fsSLo "$f" "https://github.com/rhysd/actionlint/releases/download/v${v}/${f}" ;;
+              gitleaks)
+                v=8.30.1; sum=551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+                f="gitleaks_${v}_linux_x64.tar.gz"
+                curl -fsSLo "$f" "https://github.com/gitleaks/gitleaks/releases/download/v${v}/${f}" ;;
+              shellcheck)
+                shellcheck --version >/dev/null
+                continue ;;
+              *)
+                echo "Unknown tool: $tool" >&2
+                exit 1 ;;
+            esac
+            echo "${sum}  ${f}" | sha256sum -c -
+            tar -xzf "$f" -C "$HOME/.local/bin" "$tool"
+            rm "$f"
+          done
+      - run: pnpm install --frozen-lockfile
+      - run: ./scripts/preflight.sh
+      - name: Audit (high and critical)
+        if: inputs.audit
+        run: pnpm audit --audit-level=high
